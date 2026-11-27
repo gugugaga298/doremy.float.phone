@@ -2126,20 +2126,20 @@ export function deleteChatMessagesFrom(messageId: string) {
     const deletedIdSet = new Set(deletedIds);
 
     _messagesCache = _messagesCache.filter(m => !deletedIdSet.has(m.id));
-    syncDeletedResponseBatchMetadata(deletedMessages);
-    dbDeleteMessagesByIds(deletedIds);
-
-    const lastMsg = getLastVisibleSessionMessage(sessionId);
-
-    const sessions = loadChatSessions();
-    const sessIdx = sessions.findIndex(s => s.id === sessionId);
-    if (sessIdx !== -1) {
-        if (lastMsg) {
-            sessions[sessIdx].lastMessageId = lastMsg.id;
-            sessions[sessIdx].lastMessagePreview = getChatMessagePreview(lastMsg);
-            sessions[sessIdx].updatedAt = lastMsg.createdAt;
-        } else {
-            sessions[sessIdx].lastMessageId = undefined;
+        syncDeletedResponseBatchMetadata(deletedMessages);
+            dbDeleteMessagesByIds(deletedIds);
+            
+                const lastMsg = getLastVisibleSessionMessage(sessionId);
+                
+                    const sessions = loadChatSessions();
+                        const sessIdx = sessions.findIndex(s => s.id === sessionId);
+                            if (sessIdx !== -1) {
+                                    if (lastMsg) {
+                                                sessions[sessIdx].lastMessageId = lastMsg.id;
+                                                            sessions[sessIdx].lastMessagePreview = getChatMessagePreview(lastMsg);
+                                                                        sessions[sessIdx].updatedAt = lastMsg.createdAt;
+                                                                                } else {
+                                                                                            sessions[sessIdx].lastMessageId = undefined;
             sessions[sessIdx].lastMessagePreview = "";
         }
         saveChatSessions(sessions);
@@ -2150,65 +2150,65 @@ export function deleteChatMessagesFrom(messageId: string) {
 
 export function deleteChatMessagesByIds(sessionId: string, messageIds: string[]): number {
     const targetIds = new Set(messageIds);
-    if (targetIds.size === 0) return 0;
+            if (targetIds.size === 0) return 0;当前音乐陪听信息
+            
+            const deletedMessages = expandToolExecutionDeleteSet(
+                    _messagesCache.filter(m => m.sessionId === sessionId && targetIds.has(m.id)),
+                        );
+                            const deletedIds = deletedMessages.map(m => m.id);
+                                if (deletedIds.length === 0) return 0;
 
-    const deletedMessages = expandToolExecutionDeleteSet(
-        _messagesCache.filter(m => m.sessionId === sessionId && targetIds.has(m.id)),
-    );
-    const deletedIds = deletedMessages.map(m => m.id);
-    if (deletedIds.length === 0) return 0;
+                                    const deletedIdSet = new Set(deletedIds);
+                                        _messagesCache = _messagesCache.filter(m => m.sessionId !== sessionId || !deletedIdSet.has(m.id));
+                                            syncDeletedResponseBatchMetadata(deletedMessages);
+                                                dbDeleteMessagesByIds(deletedIds);
+                                                    reindexSessionMessageOrders(sessionId);
 
-    const deletedIdSet = new Set(deletedIds);
-    _messagesCache = _messagesCache.filter(m => m.sessionId !== sessionId || !deletedIdSet.has(m.id));
-    syncDeletedResponseBatchMetadata(deletedMessages);
-    dbDeleteMessagesByIds(deletedIds);
-    reindexSessionMessageOrders(sessionId);
+                                                        const lastMsg = getLastVisibleSessionMessage(sessionId);
+                                                            const sessions = loadChatSessions();
+                                                                const sessIdx = sessions.findIndex(s => s.id === sessionId);
+                                                                    if (sessIdx !== -1) {
+                                                                            if (lastMsg) {
+                                                                                        sessions[sessIdx].lastMessageId = lastMsg.id;
+                                                                                                    sessions[sessIdx].lastMessagePreview = getChatMessagePreview(lastMsg);
+                                                                                                                sessions[sessIdx].updatedAt = lastMsg.createdAt;
+                                                                                                                        } else {
+                                                                                                                                    sessions[sessIdx].lastMessageId = undefined;
+                                                                                                                                                sessions[sessIdx].lastMessagePreview = "";
+                                                                                                                                                        }
+                                                                                                                                                                saveChatSessions(sessions);
+                                                                                                                                                                    }
 
-    const lastMsg = getLastVisibleSessionMessage(sessionId);
-    const sessions = loadChatSessions();
-    const sessIdx = sessions.findIndex(s => s.id === sessionId);
-    if (sessIdx !== -1) {
-        if (lastMsg) {
-            sessions[sessIdx].lastMessageId = lastMsg.id;
-            sessions[sessIdx].lastMessagePreview = getChatMessagePreview(lastMsg);
-            sessions[sessIdx].updatedAt = lastMsg.createdAt;
-        } else {
-            sessions[sessIdx].lastMessageId = undefined;
-            sessions[sessIdx].lastMessagePreview = "";
-        }
-        saveChatSessions(sessions);
-    }
+                                                                                                                                                                        dispatchDeletedMessages(deletedMessages);
+                                                                                                                                                                            return deletedIds.length;
+                                                                                                                                                                            }
 
-    dispatchDeletedMessages(deletedMessages);
-    return deletedIds.length;
-}
+                                                                                                                                                                            export function editChatMessage(messageId: string, newContent: string) {
+                                                                                                                                                                                const msgIdx = _messagesCache.findIndex(m => m.id === messageId);
+                                                                                                                                                                                    if (msgIdx !== -1) {
+                                                                                                                                                                                            _messagesCache[msgIdx] = { ..._messagesCache[msgIdx], content: newContent };
+                                                                                                                                                                                                invalidateSortedSessionMessageCache();
+                                                                                                                                                                                                        dbPutMessage(_messagesCache[msgIdx]);
 
-export function editChatMessage(messageId: string, newContent: string) {
-    const msgIdx = _messagesCache.findIndex(m => m.id === messageId);
-    if (msgIdx !== -1) {
-        _messagesCache[msgIdx] = { ..._messagesCache[msgIdx], content: newContent };
-    invalidateSortedSessionMessageCache();
-        dbPutMessage(_messagesCache[msgIdx]);
+                                                                                                                                                                                                                const sessionId = _messagesCache[msgIdx].sessionId;
+                                                                                                                                                                                                                        const lastMsg = getLastVisibleSessionMessage(sessionId);
 
-        const sessionId = _messagesCache[msgIdx].sessionId;
-        const lastMsg = getLastVisibleSessionMessage(sessionId);
+                                                                                                                                                                                                                                const sessions = loadChatSessions();
+                                                                                                                                                                                                                                        const sessIdx = sessions.findIndex(s => s.id === sessionId);
+                                                                                                                                                                                                                                                if (sessIdx !== -1 && lastMsg && sessions[sessIdx].lastMessageId === lastMsg.id) {
+                                                                                                                                                                                                                                                            sessions[sessIdx].lastMessagePreview = getChatMessagePreview(lastMsg);
+                                                                                                                                                                                                                                                                        saveChatSessions(sessions);
+                                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                                    }
 
-        const sessions = loadChatSessions();
-        const sessIdx = sessions.findIndex(s => s.id === sessionId);
-        if (sessIdx !== -1 && lastMsg && sessions[sessIdx].lastMessageId === lastMsg.id) {
-            sessions[sessIdx].lastMessagePreview = getChatMessagePreview(lastMsg);
-            saveChatSessions(sessions);
-        }
-    }
-}
-
-export function retractChatMessage(messageId: string) {
-    const msgIdx = _messagesCache.findIndex(m => m.id === messageId);
-    if (msgIdx !== -1) {
-        _messagesCache[msgIdx] = { ..._messagesCache[msgIdx], isRetracted: true };
-    invalidateSortedSessionMessageCache();
-        dbPutMessage(_messagesCache[msgIdx]);
-
+                                                                                                                                                                                                                                                                                    export function retractChatMessage(messageId: string) {
+                                                                                                                                                                                                                                                                                        const msgIdx = _messagesCache.findIndex(m => m.id === messageId);
+                                                                                                                                                                                                                                                                                            if (msgIdx !== -1) {
+                                                                                                                                                                                                                                                                                                    _messagesCache[msgIdx] = { ..._messagesCache[msgIdx], isRetracted: true };
+                                                                                                                                                                                                                                                                                                        invalidateSortedSessionMessageCache();
+                                                                                                                                                                                                                                                                                                                dbPutMessage(_messagesCache[msgIdx]);
+                                                                                                                                                                                                                                                                                                                
         const sessionId = _messagesCache[msgIdx].sessionId;
         const lastMsg = getLastVisibleSessionMessage(sessionId);
 
