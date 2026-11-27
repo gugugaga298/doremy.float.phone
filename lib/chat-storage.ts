@@ -2150,7 +2150,7 @@ export function deleteChatMessagesFrom(messageId: string) {
 
 export function deleteChatMessagesByIds(sessionId: string, messageIds: string[]): number {
     const targetIds = new Set(messageIds);
-            if (targetIds.size === 0) return 0;当前音乐陪听信息
+            if (targetIds.size === 0) return 0;
             
             const deletedMessages = expandToolExecutionDeleteSet(
                     _messagesCache.filter(m => m.sessionId === sessionId && targetIds.has(m.id)),

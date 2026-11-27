@@ -1767,7 +1767,8 @@ export function buildNativeChatTools(enabledTools: EnabledTool[], expandedSource
             }
                         continue;
                                 }
-                                
+                                import { maybeAppendShortcutCapability, maybeAppendPerceptionStatus } from "./offline-shortcut-capability";
+                                import { maybeBuildStatusInjection } from "./perception/describe";
         if (tool.source === "mcp_server") {
             for (const mcpTool of tool.mcpTools || []) {
                 registerTool(mcpTool.name, mcpTool.description || tool.description, mcpTool.inputSchema || {}, sourceKey);
