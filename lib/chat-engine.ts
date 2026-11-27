@@ -2,8 +2,7 @@
 
 import { createSseJsonParser } from "./sse-json";
 import { makeNativeToolName } from "./native-tool-name";
-import { maybeAppendShortcutCapability, maybeAppendPerceptionStatus } from "./offline-shortcut-capability";
-import { maybeBuildStatusInjection } from "./perception/describe";
+import { maybeAppendShortcutCapability, maybeAppendPerceptionStatus } from "./offline-shortcut-capability";import {  } from "./perception/describe";
 import { loadCharacters } from "./character-storage";
 import { buildLifeMemoryContext, buildLifePresenceContext } from "./life/life-memory-bridge";
 import { buildScreenEffectPromptHint } from "./chat-screen-effects";
@@ -75,6 +74,7 @@ import type { ToolCall, ToolResult } from "./tool-executor";
 import { getCustomStickerNames, getCustomStickerExample } from "./custom-sticker-storage";
 import { formatCustomAppChatDirectivesForPrompt } from "./custom-app-chat-directives";
 import { loadAllTracks } from "./music-storage";
+import { getMusicControlBridge } from "./music-control-bridge";
 import { getActiveAppTags } from "./content-tag-utils";
 import { isNeteaseConfigured, getUserPlaylists, getPlaylistTracks, checkLoginStatus, loadMusicApiConfig } from "./music-service";
 import { buildCalendarScheduleMarker, getCurrentCalendarScheduleForPrompt } from "./calendar-storage";
@@ -2132,9 +2132,44 @@ export async function buildChatPromptMessages(
     // 又不打断预设精心安排的消息顺序。只在线聊天注入——离线场景由
     // offline-shortcut-capability 的 maybeAppendPerceptionStatus 负责。
     if (!isOfflineMode) {
-        const perceptionInjection = maybeBuildStatusInjection();
+        const perceptionInjection = ();
         if (perceptionInjection) llmMessages.push({ role: "system", content: perceptionInjection });
     }
+
+        // 音乐陪听上下文：让角色知道当前正在播放的歌曲。
+            try {
+                    const musicState = getMusicControlBridge()?.getState();
+                            const track = musicState?.currentTrack;
+
+                                    if (track) {
+                                                const seconds = Math.max(0, Math.floor(musicState?.currentTime ?? 0));
+                                                            const duration = Math.max(0, Math.floor(musicState?.duration ?? track.duration ?? 0));
+
+                                                                        const formatTime = (value: number) =>
+                                                                                        `${Math.floor(value / 60)}:${String(value % 60).padStart(2, "0")}`;
+
+                                                                                                    const lyrics = typeof track.lyrics === "string"
+                                                                                                                    ? track.lyrics.trim().slice(0, 5000)
+                                                                                                                                    : "";
+
+                                                                                                                                                llmMessages.push({
+                                                                                                                                                                role: "system",
+                                                                                                                                                                                content: [
+                                                                                                                                                                                                    "【当前音乐陪听信息】",
+                                                                                                                                                                                                                        `当前歌曲：${track.title} — ${track.artist}`,
+                                                                                                                                                                                                                                            track.album ? `专辑：${track.album}` : "",
+                                                                                                                                                                                                                                                                `播放状态：${musicState?.isPlaying ? "正在播放" : "已暂停"}`,
+                                                                                                                                                                                                                                                                                    `进度：${formatTime(seconds)} / ${formatTime(duration)}`,
+                                                                                                                                                                                                                                                                                                        lyrics ? `当前歌曲歌词（可能不完整）：\n${lyrics}` : "当前没有可用歌词。",
+                                                                                                                                                                                                                                                                                                                            "你可以结合角色人设和当前歌曲、歌词，自然地分享感受或回应用户的音乐话题。",
+                                                                                                                                                                                                                                                                                                                                                "不要每轮都刻意提歌，也不要打断无关话题。",
+                                                                                                                                                                                                                                                                                                                                                                    "不要假装实际听到了音频、旋律或未提供的歌词。",
+                                                                                                                                                                                                                                                                                                                                                                                    ].filter(Boolean).join("\n"),
+                                                                                                                                                                                                                                                                                                                                                                                                });
+                                                                                                                                                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                                                                                                                                            } catch (error) {
+                                                                                                                                                                                                                                                                                                                                                                                                                    console.warn("[ChatEngine] Music context injection skipped:", error);
+                                                                                                                                                                                                                                                                                                                                                                                                                        }
 
     // ── 一次性事件提示（定时查岗的反应指导语）──
     // 放在最后：它是「此刻该怎么回应」的即时要求，压过前面所有常驻设定。
