@@ -1,5 +1,5 @@
 // lib/chat-engine.ts
-// 
+// // 
 import { createSseJsonParser } from "./sse-json";
 import { makeNativeToolName } from "./native-tool-name";
 import { maybeAppendShortcutCapability, maybeAppendPerceptionStatus } from "./offline-shortcut-capability";
@@ -1768,8 +1768,7 @@ export function buildNativeChatTools(enabledTools: EnabledTool[], expandedSource
             }
                         continue;
                                 }
-                                import { maybeAppendShortcutCapability, maybeAppendPerceptionStatus } from "./offline-shortcut-capability";
-        if (tool.source === "mcp_server") {
+                                        if (tool.source === "mcp_server") {
             for (const mcpTool of tool.mcpTools || []) {
                 registerTool(mcpTool.name, mcpTool.description || tool.description, mcpTool.inputSchema || {}, sourceKey);
             }
